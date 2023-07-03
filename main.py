@@ -22,6 +22,9 @@ orange_mask = cv2.morphologyEx(orange_mask, cv2.MORPH_OPEN, kernel)
 # Encontrar los contornos de los objetos naranjas
 contours, _ = cv2.findContours(orange_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+# Imprimir el número de naranjas encontradas
+print(f"Número de naranjas encontradas: {len(contours)}")
+
 # Encontrar el centroide y dibujar un marco alrededor de cada contorno
 for contour in contours:
     # Calcular el centroide del contorno
