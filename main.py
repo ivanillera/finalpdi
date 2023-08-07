@@ -4,15 +4,12 @@ import numpy as np
 # Cargar la imagen
 image = cv2.imread('img/naranjo.jpg')
 
-# Convertir la imagen de BGR a HSV
-hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+# Definir el rango de color naranja en RGB
+lower_orange = np.array([0, 70, 130], dtype=np.uint8)
+upper_orange = np.array([196, 243, 255], dtype=np.uint8)
 
-# Definir el rango de color naranja en HSV
-lower_orange = np.array([0, 50, 50])
-upper_orange = np.array([30, 255, 255])
-
-# Crear una máscara para los píxeles naranjas en el rango definido
-orange_mask = cv2.inRange(hsv_image, lower_orange, upper_orange)
+# Aplicar una máscara para los píxeles naranjas en el rango definido
+orange_mask = cv2.inRange(image, lower_orange, upper_orange)
 
 # Aplicar operaciones morfológicas para mejorar la detección de las naranjas
 kernel = np.ones((5, 5), np.uint8)
@@ -25,22 +22,22 @@ contours, _ = cv2.findContours(orange_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_
 # Imprimir el número de naranjas encontradas
 print(f"Número de naranjas encontradas: {len(contours)}")
 
-# Encontrar el centroide y dibujar un marco alrededor de cada contorno
+# Dibujar un marco y el centroide de cada contorno
 for contour in contours:
+    # Dibujar un marco alrededor del contorno
+    x, y, w, h = cv2.boundingRect(contour)
+    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    
     # Calcular el centroide del contorno
     M = cv2.moments(contour)
     if M["m00"] != 0:
         cX = int(M["m10"] / M["m00"])
         cY = int(M["m01"] / M["m00"])
-
+        
         # Dibujar el centroide
         cv2.circle(image, (cX, cY), 5, (0, 255, 0), -1)
 
-        # Dibujar un marco alrededor del contorno
-        x, y, w, h = cv2.boundingRect(contour)
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
-
-# Mostrar la imagen con los centroides y marcos dibujados
+# Mostrar la imagen con los marcos y centroides dibujados
 cv2.imshow('Naranjas detectadas', image)
 cv2.waitKey(0)
 
