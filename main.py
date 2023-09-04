@@ -1,8 +1,9 @@
 import cv2
 import numpy as np
+# Idea. empezar detectando circulos y luego filtrar por color.
 
 # Cargar la imagen
-image = cv2.imread('img/naranjo.jpg')
+image = cv2.imread('img/naranjo2.jpg')
 
 # Definir el rango de color naranja en RGB
 lower_orange = np.array([0, 70, 130], dtype=np.uint8)
