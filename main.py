@@ -150,11 +150,25 @@ print(f"Accepted_areas: {accepted_areas}")
 
 
 #TODO Usar better_contours en vez de contours
+for cnt in contours:
+   area = cv2.contourArea(cnt)
+   if area in accepted_areas:
+      better_contours.append(cnt)
+print("len better contours")
+print(len(better_contours))
+
+imgContours = cv2.drawContours(image, contours, -1, (0,255,0), 1)
+cv2.imwrite("contours_with_area.jpg", imgContours)
+print("len contours")
+num_naranjas = len(contours)
+print(num_naranjas)
+#print(f"Número de naranjas contornos con area {num_naranjas}")
+showWait("Contours",imgContours)
 
 imgBetterContours = cv2.drawContours(image, contours, -1, (0,255,0), 1)
 cv2.imwrite("contours_with_area.jpg", imgBetterContours)
 print("len contours")
-num_naranjas = len(contours)
+num_naranjas = len(better_contours)
 print(num_naranjas)
 #print(f"Número de naranjas contornos con area {num_naranjas}")
 showWait("BetterContours",imgBetterContours)
