@@ -9,7 +9,7 @@ def showWait(titulo, imagen):
 
 # Cargar la imagen
 image = cv2.imread('img/naranjo2.jpg')
-showWait('imagen original', image)
+#showWait('imagen original', image)
 
 # Convertir la imagen a espacio de color HSV
 hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -21,6 +21,7 @@ upper_orange = np.array([20, 255, 255])
 # Crear una máscara para el color naranja
 mask = cv2.inRange(hsv_image, lower_orange, upper_orange)
 cv2.imwrite("Mascara.jpg",mask)
+
 # Hough
 img = cv2.imread('Mascara.jpg',cv2.IMREAD_GRAYSCALE)
 imgBlur = cv2.medianBlur(img,5)
@@ -34,71 +35,126 @@ for i in circles[0,:]:
  cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
  # draw the center of the circle
  cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
-cv2.imshow('detected circles',cimg)
+#cv2.imshow('detected circles',cimg)
 num_centros = circles.shape[1]
-print(f"Cantidad de centros encontrados con Hough: {num_centros}")
-cv2.waitKey(0)
+#print(f"Cantidad de centros encontrados con Hough: {num_centros}")
+#cv2.waitKey(0)
 #cv2.destroyAllWindows()
 
 # Encontrar los contornos de las regiones naranjas
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-contornosConArea = []
+better_contours = []
 areas = []
+
 for cnt in contours:
    area = cv2.contourArea(cnt)
    if area != 0:
       areas.append(area)
-      contornosConArea.append(cnt)
-print(contornosConArea)
-minimo = min(areas)
-maximo = max(areas)
-print(f"minimo {minimo} y maximo {maximo}")
-media = sum(areas) / len(areas)
-desviacion_estandar = statistics.stdev(areas)
-print(f"media aresas: {media}")
-print(f"desviacion estandar {desviacion_estandar}")
+      #better_contours.append(cnt) #better_contours no tiene mas area cero, falta que esté en los cuartiles aceptados
 
-tamaño_cuartil = (maximo - minimo) / 4
-cuartil1 = []
-cuartil2 = []
-cuartil3 = []
-cuartil4 = []
+print(areas)
+#print(contours_with_area)
+min_area = min(areas)
+max_area = max(areas)
+#print(f"min_area {min_area} y max_area {max_area}")
+area_media = sum(areas) / len(areas)
+area_desviacion_estandar = statistics.stdev(areas)
+#print(f"area_media aresas: {area_media}")
+#print(f"desviacion estandar {area_desviacion_estandar}")
+
+distribution_size = max_area - min_area
+quartile_size = distribution_size / 4
+
+def alfa(quartile):
+   alfa = len(quartile) / distribution_size
+   #print(alfa)
+   #print("alfa")
+   
+
+quartile1 = []
+quartile2 = []
+quartile3 = []
+quartile4 = []
+
 for area in areas:
-   if area < tamaño_cuartil:
-      cuartil1.append(area)
-   elif (area < (2*tamaño_cuartil)) & (area > tamaño_cuartil):
-      cuartil2.append(area)
-   elif (area < (3*tamaño_cuartil)) & (area > 2*tamaño_cuartil):
-      cuartil3.append(area)
-   elif (area > 3*tamaño_cuartil):
-      cuartil4.append(area)
-print(f"cuartil1 {len(cuartil1)} cuartil2 {len(cuartil2)} cuartil3 {len(cuartil3)} cuartil4 {len(cuartil4)}")
-# nos damos cuenta que hay que descartar los cuartiles 3 y 4 porque son 8 y 2 respectivamente...
+   if area < quartile_size: # PRIMER CUARTIL
+      quartile1.append(area)
+   elif (area < (2*quartile_size)) & (area > quartile_size): #SEGUNDO CUARTIl
+      quartile2.append(area)
+   elif (area < (3*quartile_size)) & (area > 2*quartile_size): #TERCER CUARTIL
+      quartile3.append(area)
+   elif (area > 3*quartile_size): #CUARTO CUARTIL
+      quartile4.append(area)
 
-areasAceptadas = []
-for area in areas:
-   if (area < 2*tamaño_cuartil) & (area >5):
-      areasAceptadas.append(area)
+min_quartile1 = min(quartile1)
+max_quartile4 = max(quartile4)
+new_distribution_size = len(quartile1)+len(quartile2)+len(quartile3)+len(quartile4)
 
 
-media_ca = sum(areasAceptadas) / len(areasAceptadas)
-desviacion_estandar_ca = statistics.stdev(areasAceptadas)
-maximo_ca = max(areasAceptadas)
-minimo_ca = min(areasAceptadas)
-print(f"media area_ca: {media_ca}")
-print(f"desviacion estandar_ca {desviacion_estandar_ca}")
-print(f"maximo {maximo_ca}")
-print(f"minimo {minimo_ca}")
+# alfa_quartile1 = len(quartile1) / new_distribution_size
+# alfa_quartile2 = len(quartile2) / new_distribution_size
+# alfa_quartile3 = len(quartile3) / new_distribution_size
+# alfa_quartile4 = len(quartile4) / new_distribution_size
+
+#print(alfa_quartile1, alfa_quartile2, alfa_quartile3, alfa_quartile4)
+
+# accepted_areas = []
+accepted_quartiles = []
+
+
+
+
+def quartile_accepted(quartile):
+   if ((len(quartile) / new_distribution_size) > 0.1):
+      accepted_quartiles.append(quartile)
+
+quartiles = [quartile1, quartile2, quartile3, quartile4]
+
+for quartile in quartiles:
+   quartile_accepted(quartile)
+
+print(accepted_quartiles)
+print(f"Acepté un total de {len(accepted_quartiles)} cuartiles")   
+
+accepted_areas = []
+
+for quartil in accepted_quartiles:
+   for area in areas:
+      if area in quartil:
+         accepted_areas.append(area)
+         
+
+area_media_accepted_areas = sum(accepted_areas) / len(accepted_areas)
+area_desviacion_estandar_accepted_areas = statistics.stdev(accepted_areas)
+max_area_accepted_areas = max(accepted_areas)
+min_area_accepted_areas = min(accepted_areas)
+print(f"area_media area_accepted_areas: {area_media_accepted_areas}")
+print(f"desviacion estandar_accepted_areas {area_desviacion_estandar_accepted_areas}")
+print(f"max_area {max_area_accepted_areas}")
+print(f"min_area {min_area_accepted_areas}")
       
-# Dibujar los contornos encontrados en la imagen original
-imgContornos = cv2.drawContours(image, contours, -1, (0, 255, 0), 1)
-cv2.imwrite("Contornos.jpg",imgContornos)
-num_naranjas = len(contours)
-print(f"Número de naranjas detectadas con contorno: {num_naranjas}")
-showWait("Naranjas detectadas", image)
+#area minima de la naranja aproximada
+min_area_prox = int(area_media_accepted_areas - area_desviacion_estandar_accepted_areas)
+max_area_prox = int(area_media_accepted_areas + area_desviacion_estandar_accepted_areas)
+print(min_area_prox, max_area_prox)  
 
-imgContornosConArea = cv2.drawContours(image, contornosConArea, -1, (0,255,0), 1)
-cv2.imwrite("ContornosConArea.jpg", imgContornosConArea)
-num_naranjas = len(contornosConArea)
-print(f"Número de naranjas contornos con area {num_naranjas}")
-showWait("asaddas",image)
+accepted_areas = [valor for valor in accepted_areas if valor >= min_area_prox and valor <= max_area_prox]
+
+print(f"Accepted_areas: {accepted_areas}")
+# # Dibujar los contornos encontrados en la imagen original
+# imgContornos = cv2.drawContours(image, contours, -1, (0, 255, 0), 1)
+# cv2.imwrite("Contornos.jpg",imgContornos)
+# num_naranjas = len(contours)
+# #print(f"Número de naranjas detectadas con contorno: {num_naranjas}")
+# showWait("Naranjas detectadas", image)
+
+
+#TODO Usar better_contours en vez de contours
+
+imgBetterContours = cv2.drawContours(image, contours, -1, (0,255,0), 1)
+cv2.imwrite("contours_with_area.jpg", imgBetterContours)
+print("len contours")
+num_naranjas = len(contours)
+print(num_naranjas)
+#print(f"Número de naranjas contornos con area {num_naranjas}")
+showWait("BetterContours",imgBetterContours)
