@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 import statistics
-
+import tkinter as tk
+from tkinter import filedialog
 
 def showWait(titulo, imagen):
     cv2.imshow(titulo, imagen)
@@ -9,8 +10,28 @@ def showWait(titulo, imagen):
     # cv2.destroyAllWindows()
 
 
+
 # Cargar la imagen
-image = cv2.imread("img/naranjo.jpg")
+#image = cv2.imread("img/naranjo.jpg")
+root = tk.Tk()
+root.withdraw()  # Ocultar la ventana principal de Tkinter
+
+file_path = filedialog.askopenfilename(title="Seleccionar una imagen")
+
+if file_path:
+    # El usuario seleccionó un archivo, carga la imagen
+    image = cv2.imread(file_path)
+    if image is not None:
+        # La imagen se cargó con éxito
+        print("La imagen se ha cargado con éxito.")
+    else:
+        print("No se pudo cargar la imagen.")
+else:
+    print("El usuario no seleccionó un archivo.")
+
+# Cierra la ventana de Tkinter
+root.destroy()
+
 # Convertir la imagen a espacio de color HSV
 hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 # Definir un rango de colores naranja en HSV
